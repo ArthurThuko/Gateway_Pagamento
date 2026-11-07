@@ -60,17 +60,21 @@ def confirmar_no_stripe(pi):
 
 
 def _dict(obj):
-    return json.loads(json.dumps(obj, default=dict))
+    """Converte objetos do SDK do Stripe (que nas versões novas NÃO são dict) em dict puro."""
+    if hasattr(obj, "to_dict"):
+        obj = obj.to_dict()
+    return json.loads(json.dumps(obj, default=lambda o: o.to_dict() if hasattr(o, "to_dict") else dict(o)))
 
 
 def evento_real(tipo, pi, tentativas=20):
     """Espera o Stripe registrar o evento e devolve o JSON real dele."""
     for _ in range(tentativas):
         for ev in stripe.Event.list(type=tipo, limit=50).data:
-            obj = ev["data"]["object"]
+            d = _dict(ev)
+            obj = d["data"]["object"]
             ligado_ao_pi = obj.get("id") == pi if obj.get("object") == "payment_intent" else obj.get("payment_intent") == pi
             if ligado_ao_pi:
-                return _dict(ev)
+                return d
         time.sleep(1.5)
     raise SystemExit(f"O Stripe não registrou {tipo} para {pi} a tempo.")
 
@@ -87,7 +91,6 @@ def mostrar_pedido(pedido_id):
     print(f"  Estado do pedido: {p['status'].upper()}   (histórico: {caminho})")
 
 
-# 1) O mesmo webhook 5 vezes -------------------------------------------------
 titulo("1) Mesmo webhook (payment_intent.succeeded REAL do Stripe) enviado 5 vezes")
 ordem, pi = novo_pedido()
 confirmar_no_stripe(pi)
@@ -98,7 +101,6 @@ for i in range(1, 6):
     print(f"  Envio {i}: HTTP {status}  outcome={corpo['outcome']:<10} {corpo['detail']}")
 mostrar_pedido(ordem["id"])
 
-# 2) Assinatura falsa ---------------------------------------------------------
 titulo("2) Webhook com assinatura FALSA (segredo do atacante)")
 ordem2, pi2 = novo_pedido()
 confirmar_no_stripe(pi2)
@@ -110,7 +112,6 @@ status, corpo = enviar(ev2)
 print(f"  Mesmo corpo, assinatura correta               -> HTTP {status}  outcome={corpo['outcome']}")
 mostrar_pedido(ordem2["id"])
 
-# 3) Fora de ordem ------------------------------------------------------------
 titulo("3) 'Pago' chega DEPOIS de 'estornado' (eventos reais, entregues invertidos)")
 ordem3, pi3 = novo_pedido()
 confirmar_no_stripe(pi3)
