@@ -1,0 +1,28 @@
+:root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #1c2430; background: #f5f6f8; }
+body { margin: 0; }
+main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+header { display: flex; align-items: baseline; justify-content: space-between; }
+h1 { margin: 0 0 8px; }
+section { background: #fff; border: 1px solid #dfe3ea; border-radius: 12px; padding: 16px 20px; margin-top: 16px; }
+h2, h3 { margin: 0 0 12px; }
+.lista { list-style: none; margin: 0; padding: 0; }
+.lista li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #eef0f4; }
+.total { font-weight: 700; text-align: right; }
+.suave { color: #6a7585; font-size: 0.9rem; }
+.modo { font-size: 0.85rem; color: #6a7585; }
+.erro { background: #fdecea; color: #9b1c1c; padding: 8px 12px; border-radius: 8px; }
+button { font: inherit; padding: 6px 12px; border-radius: 8px; border: 1px solid #b8c0cc; background: #fff; cursor: pointer; }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+button.primario { background: #1f5eff; border-color: #1f5eff; color: #fff; font-weight: 600; }
+button.link { border: 0; background: none; color: #1f5eff; padding: 0; text-decoration: underline; }
+.selo { padding: 2px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+.selo-pendente { background: #fff4d6; color: #8a6100; }
+.selo-pago { background: #d9f5e3; color: #146c3a; }
+.selo-enviado { background: #dbe8ff; color: #1f4fb8; }
+.selo-recusado { background: #fde1e1; color: #a12626; }
+.selo-estornado { background: #e8e0f5; color: #5a3a96; }
+.caixa { border: 1px solid #dfe3ea; border-radius: 10px; padding: 12px 16px; margin: 16px 0; }
+.demo { background: #f7f9ff; }
+.botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+pre { background: #101722; color: #d7e0ee; padding: 12px; border-radius: 8px; overflow: auto; font-size: 0.8rem; }
+.historico { padding-left: 20px; }
