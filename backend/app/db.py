@@ -123,7 +123,6 @@ def init_db(settings) -> None:
     except pymysql.err.OperationalError as exc:
         raise RuntimeError(
             f"Não foi possível conectar ao MySQL em {settings.mysql_host}:{settings.mysql_port} ({exc}). "
-            "Suba o banco com `docker compose up -d` e confira as variáveis MYSQL_* no .env."
         ) from exc
     try:
         raw.cursor().execute(f"CREATE DATABASE IF NOT EXISTS `{nome}` CHARACTER SET utf8mb4")

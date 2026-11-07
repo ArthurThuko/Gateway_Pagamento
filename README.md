@@ -18,7 +18,6 @@ Uma loja virtual em que o **Stripe (modo de teste)** confirma o pagamento **depo
 ## 1. Estrutura
 
 ```
-docker-compose.yml     # MySQL 8 para desenvolvimento
 backend/
   app/
     state_machine.py   # máquina de estados do pedido (pura, sem I/O)
@@ -49,19 +48,35 @@ Navegador ──GET /orders/{id} (polling)▶ API   vê o estado mudar quando o 
 ### Pré-requisitos
 
 - **Python 3.11+** e **Node.js 20+** (com npm)
-- **Docker Desktop** (para o MySQL) — ou um MySQL 8 instalado por conta própria (veja abaixo)
+- **MySQL 8.0 ou superior** instalado e rodando
 - Conta no **Stripe** com o **modo de teste** ligado e a **[Stripe CLI](https://docs.stripe.com/stripe-cli)**
-- Mac: `brew install python node` · Windows: instaladores de python.org (marque *Add python.exe to PATH*) e nodejs.org
+- Mac: `brew install python node mysql` · Windows: instaladores de python.org (marque *Add python.exe to PATH*) e nodejs.org
 
 ### 1) Banco de dados MySQL
 
+Use o MySQL já instalado: no Mac, `brew install mysql && brew services start mysql`; no Windows, o MySQL Installer (confira se o serviço `MySQL80` está iniciado).
+
+Teste a conexão:
+
 ```bash
-docker compose up -d        # igual no Mac e no Windows; cria o banco "loja" (usuário root, senha loja_dev)
+mysql -u root -p -e "SELECT VERSION();"
 ```
 
-> Porta 3306 ocupada (por exemplo, por um MySQL local)? Pare o outro serviço ou mude a porta em `docker-compose.yml` e em `MYSQL_PORT` no `.env`.
->
-> **Sem Docker:** Mac `brew install mysql && brew services start mysql`; Windows: MySQL Installer (dev.mysql.com). Depois ajuste `MYSQL_USER` e `MYSQL_PASSWORD` no `.env`. O usuário precisa poder criar bancos (a aplicação cria `loja` e o pytest cria `loja_test`).
+Coloque o usuário e a senha em `MYSQL_USER` e `MYSQL_PASSWORD` no `.env` (passo 3). No Mac com Homebrew, o `root` costuma vir **sem senha**: deixe `MYSQL_PASSWORD=` vazio.
+
+A aplicação cria os bancos sozinha: `loja` na primeira subida e `loja_test` na primeira execução do pytest (o usuário precisa da permissão `CREATE`; o `root` tem). Se preferir criar à mão, ou usar um usuário dedicado:
+
+```sql
+CREATE DATABASE IF NOT EXISTS loja CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS loja_test CHARACTER SET utf8mb4;
+
+-- opcional: usuário dedicado
+CREATE USER 'loja'@'localhost' IDENTIFIED BY 'sua_senha';
+GRANT ALL PRIVILEGES ON loja.* TO 'loja'@'localhost';
+GRANT ALL PRIVILEGES ON loja_test.* TO 'loja'@'localhost';
+```
+
+> Use MySQL **8.0.16 ou superior**: versões anteriores ignoram em silêncio a restrição `CHECK` do preço.
 
 ### 2) Chaves do Stripe (somente modo de teste)
 
@@ -122,7 +137,7 @@ Para ver o **estorno**, abra o pagamento no Dashboard (modo de teste) e clique e
 
 ### Ordem para subir tudo
 
-1. MySQL (`docker compose up -d`)
+1. MySQL rodando (serviço no Windows; `brew services start mysql` no Mac)
 2. API (`uvicorn app.main:create_app --factory --port 8000`)
 3. `stripe listen …` (comando acima) — **antes** de pagar: a CLI não reenvia eventos do passado
 4. Frontend (`npm run dev`) e, só então, o pagamento
