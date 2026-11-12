@@ -1,12 +1,3 @@
-"""Assinatura HMAC-SHA256 do webhook, no mesmo formato do Stripe.
-
-Cabeçalho:  Stripe-Signature: t=<timestamp>,v1=<hex>
-Onde:       v1 = HMAC_SHA256(segredo, f"{t}.{corpo_bruto}")
-
-Implementado à mão (em vez de stripe.Webhook.construct_event) para a equipe mostrar e
-defender cada decisão de segurança. O formato é o mesmo, então eventos reais do Stripe
-passam por aqui.
-"""
 import hashlib
 import hmac
 import time
@@ -28,7 +19,6 @@ def sign_payload(payload: bytes, secret: str, timestamp: int | None = None) -> s
 
 def verify_signature(payload: bytes, header: str | None, secret: str,
                      tolerance_seconds: int = 300, now: float | None = None) -> None:
-    """Levanta SignatureError se o webhook não for autêntico. `payload` é o corpo BRUTO."""
     if not header:
         raise SignatureError("cabeçalho Stripe-Signature ausente")
 
