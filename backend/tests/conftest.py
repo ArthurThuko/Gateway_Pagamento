@@ -17,7 +17,6 @@ TABELAS = ("order_items", "order_history", "webhook_events", "idempotency_keys",
 
 @pytest.fixture(scope="session")
 def settings():
-    """Usa o MySQL do .env, mas em um banco SEPARADO (MYSQL_TEST_DATABASE) para nunca tocar nos dados da loja."""
     base = load_settings()
     teste = os.environ.get("MYSQL_TEST_DATABASE", "loja_test")
     if teste == base.mysql_database:
@@ -38,7 +37,6 @@ def conn(settings):
 
 @pytest.fixture
 def pedido(conn):
-    """Pedido pendente que já tem payment_intent_id, para os testes de WEBHOOK (que só precisam desse vínculo)."""
     ordem = services.create_order(conn, [{"product_id": "camiseta", "quantity": 2}])
     pi = f"pi_teste_{uuid.uuid4().hex[:18]}"
     conn.execute("UPDATE orders SET payment_intent_id = %s, client_secret = %s WHERE id = %s",
@@ -46,10 +44,8 @@ def pedido(conn):
     return SimpleNamespace(id=ordem["id"], pi=pi, total=ordem["total_cents"])
 
 
-# ---------------------------------------------------------------- Stripe REAL (modo de teste)
 @pytest.fixture
 def stripe_gateway(settings):
-    """Gateway de verdade. Sem chaves de teste no .env, os testes que dependem dele são pulados."""
     try:
         settings.validate_stripe()
     except RuntimeError as exc:
@@ -58,8 +54,6 @@ def stripe_gateway(settings):
 
 
 class Espiao:
-    """Conta as chamadas ao Stripe e REPASSA cada uma ao gateway real (não simula nada)."""
-
     def __init__(self, gateway):
         self._gateway = gateway
         self._lock = threading.Lock()

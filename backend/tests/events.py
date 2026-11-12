@@ -1,8 +1,3 @@
-"""Monta payloads de webhook no formato do Stripe, como DADO DE ENTRADA dos testes de webhook.
-
-Não é um gateway: nada aqui cria pagamentos nem fala com o Stripe. Serve para exercitar a nossa
-lógica de recebimento com eventos controlados (duplicados, fora de ordem, etc.).
-"""
 import time
 import uuid
 

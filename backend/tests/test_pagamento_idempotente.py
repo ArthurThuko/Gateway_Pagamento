@@ -1,8 +1,3 @@
-"""Regra central nº 1: o usuário clica duas vezes em "Pagar" — como evitar a cobrança dupla?
-
-Estes testes falam com o Stripe REAL (modo de teste): precisam de rede e das chaves no .env.
-Sem as chaves, são pulados (veja a fixture `stripe_gateway`).
-"""
 import threading
 import uuid
 

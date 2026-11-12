@@ -1,4 +1,3 @@
-"""Regra central nº 3: como saber que a notificação vem do gateway e não de um atacante?"""
 import hashlib
 import hmac
 
