@@ -9,7 +9,7 @@ Uma loja virtual em que o **Stripe (modo de teste)** confirma o pagamento **depo
 | Backend | FastAPI (Python 3.11+) |
 | Banco | **MySQL 8** (InnoDB) via PyMySQL |
 | Frontend | React 18 + Vite, Stripe Elements |
-| Pagamento | **Stripe em modo de teste** (não há gateway simulado) |
+| Pagamento | **Stripe em modo de teste** |
 | Segurança | Assinatura HMAC-SHA256 do webhook (formato `Stripe-Signature`) e header `Idempotency-Key` |
 | Testes | pytest |
 
@@ -64,7 +64,7 @@ mysql -u root -p -e "SELECT VERSION();"
 
 Coloque o usuário e a senha em `MYSQL_USER` e `MYSQL_PASSWORD` no `.env` (passo 3). No Mac com Homebrew, o `root` costuma vir **sem senha**: deixe `MYSQL_PASSWORD=` vazio.
 
-A aplicação cria os bancos sozinha: `loja` na primeira subida e `loja_test` na primeira execução do pytest (o usuário precisa da permissão `CREATE`; o `root` tem). Se preferir criar à mão, ou usar um usuário dedicado:
+A aplicação cria os bancos sozinha: `loja_gateway_pay` na primeira subida e `loja_test` na primeira execução do pytest (o usuário precisa da permissão `CREATE`; o `root` tem). Se preferir criar à mão, ou usar um usuário dedicado:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS loja CHARACTER SET utf8mb4;
@@ -90,8 +90,6 @@ GRANT ALL PRIVILEGES ON loja_test.* TO 'loja'@'localhost';
    - `--api-key` garante que a CLI escute a **mesma conta** das chaves do `.env` (se ela estiver logada em outra conta, nenhum evento chega).
    - Use `127.0.0.1` em vez de `localhost`: no Windows, `localhost` pode resolver para IPv6 e a API escuta em IPv4.
    - A CLI imprime um segredo `whsec_…`. Ele é o `STRIPE_WEBHOOK_SECRET`. Se você alterar o `.env`, **reinicie a API** (o `--reload` não observa o `.env`).
-
-A aplicação **recusa iniciar** se as chaves não forem de teste (`sk_test_`, `pk_test_`, `whsec_`) e **recusa eventos com `livemode: true`**.
 
 ### 3) Backend
 
@@ -138,20 +136,9 @@ Para ver o **estorno**, abra o pagamento no Dashboard (modo de teste) e clique e
 ### Ordem para subir tudo
 
 1. MySQL rodando (serviço no Windows; `brew services start mysql` no Mac)
-2. API (`uvicorn app.main:create_app --factory --port 8000`)
-3. `stripe listen …` (comando acima) — **antes** de pagar: a CLI não reenvia eventos do passado
+2. `stripe listen …` (comando acima) — **antes** de pagar: a CLI não reenvia eventos do passado
+3. API (`uvicorn app.main:create_app --factory --port 8000`)
 4. Frontend (`npm run dev`) e, só então, o pagamento
-
-### Problemas comuns
-
-| Sintoma | Causa e solução |
-|---|---|
-| `must specify events to forward using --events…` | Versão nova da CLI: use `--events` (ou `--all-snapshot`), como no comando acima. |
-| Nada aparece no `stripe listen` | A CLI está logada em outra conta: use `--api-key sk_test_…`. Ou o pagamento ainda não foi confirmado. |
-| `stripe listen` mostra `[400]` | `STRIPE_WEBHOOK_SECRET` diferente do `whsec_…` impresso pela CLI. Corrija o `.env` e reinicie a API. |
-| `ERR_CONNECTION_REFUSED` no navegador / `connection refused` na CLI | A API caiu. Veja o traceback no terminal dela. Dentro do OneDrive o `--reload` pode reiniciar a API sem parar: tire o `--reload` ou mova o projeto para fora do OneDrive. |
-| `This PaymentIntent is in a terminal state…` (400 do Stripe.js) | O pedido já foi pago, mas o webhook se perdeu (API ou CLI fora do ar na hora). O pedido fica *Pendente* e a tela oferece o formulário de novo. Abandone esse pedido, suba tudo na ordem acima e crie outro. |
-| `stripe trigger …` responde `unknown_order` | Esperado: o evento não pertence a nenhum pedido da loja. Pague pelo site. |
 
 ### Testes automatizados
 

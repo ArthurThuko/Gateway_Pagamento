@@ -1,9 +1,3 @@
-"""Máquina de estados do pedido: pura (sem banco, sem HTTP) e, por isso, fácil de testar.
-
-Ideia central: o estado SÓ AVANÇA (pendente < recusado < pago < enviado < estornado).
-Como nenhuma transição volta atrás, a ordem de chegada dos webhooks deixa de importar:
-qualquer permutação dos mesmos eventos termina no mesmo estado final.
-"""
 from dataclasses import dataclass
 from enum import Enum
 

@@ -1,4 +1,3 @@
-"""Regras centrais nº 2 e 4: o mesmo webhook 3 vezes é processado uma só vez; ordem trocada converge."""
 import threading
 
 from app import services

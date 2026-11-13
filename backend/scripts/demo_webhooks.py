@@ -1,18 +1,3 @@
-"""Demonstração com o STRIPE REAL em modo de teste: 5 reenvios, assinatura falsa e ordem trocada.
-
-Pré-requisitos: API rodando, MySQL no ar, chaves de teste no .env e o `stripe listen` PARADO.
-(Se o `stripe listen` estiver ligado, o Stripe entrega os eventos antes do script e o 1º envio já aparece
-como "duplicate".)
-
-O que o script faz:
-  1. cria pedidos e pagamentos pela nossa API (PaymentIntents reais no Stripe de teste);
-  2. confirma o pagamento com cartões de teste pela API do Stripe (e estorna um deles);
-  3. busca os eventos REAIS gerados pelo Stripe (payment_intent.succeeded, charge.refunded);
-  4. entrega esses eventos ao nosso webhook, assinados com STRIPE_WEBHOOK_SECRET. Para o endpoint isso é
-     indistinguível de uma entrega do Stripe: a verificação é a mesma conta HMAC-SHA256.
-
-Uso:  python scripts/demo_webhooks.py            (Windows: py scripts\\demo_webhooks.py)
-"""
 import json
 import sys
 import time
@@ -48,26 +33,22 @@ def titulo(texto):
 
 
 def novo_pedido():
-    """Pedido + PaymentIntent real (criado pela nossa API, com Idempotency-Key)."""
     _, ordem = http("POST", "/orders", {"items": [{"product_id": "camiseta", "quantity": 1}]})
     _, pay = http("POST", f"/orders/{ordem['id']}/pay", headers={"Idempotency-Key": f"demo-{ordem['id']}"})
     return ordem, pay["payment_intent_id"]
 
 
 def confirmar_no_stripe(pi):
-    """Paga com o cartão de teste 4242 4242 4242 4242 (pm_card_visa)."""
     stripe.PaymentIntent.confirm(pi, payment_method="pm_card_visa", return_url="https://example.com/retorno")
 
 
 def _dict(obj):
-    """Converte objetos do SDK do Stripe (que nas versões novas NÃO são dict) em dict puro."""
     if hasattr(obj, "to_dict"):
         obj = obj.to_dict()
     return json.loads(json.dumps(obj, default=lambda o: o.to_dict() if hasattr(o, "to_dict") else dict(o)))
 
 
 def evento_real(tipo, pi, tentativas=20):
-    """Espera o Stripe registrar o evento e devolve o JSON real dele."""
     for _ in range(tentativas):
         for ev in stripe.Event.list(type=tipo, limit=50).data:
             d = _dict(ev)

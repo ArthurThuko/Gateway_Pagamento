@@ -1,4 +1,3 @@
-"""Regra central nº 4: "pago" chega depois de "estornado" — qual estado vale?"""
 from itertools import permutations
 
 import pytest
@@ -44,7 +43,6 @@ def test_nao_envia_pedido_nao_pago():
 
 
 def test_o_estado_so_avanca():
-    """Invariante que torna a ordem de chegada irrelevante."""
     for (origem, _), destino in TRANSITIONS.items():
         assert RANK[destino] > RANK[origem]
 

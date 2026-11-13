@@ -1,8 +1,3 @@
-"""Ponta a ponta pela API HTTP, com MySQL e Stripe REAL em modo de teste (precisa de rede e chaves no .env).
-
-Os webhooks aqui são assinados com o segredo de teste da suíte; o que o Stripe entrega de verdade é
-exercitado pela demonstração (scripts/demo_webhooks.py).
-"""
 import json
 
 import pytest

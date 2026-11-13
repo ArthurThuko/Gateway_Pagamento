@@ -68,44 +68,50 @@ export default function App() {
         <Pedido id={pedidoId} config={config} voltar={() => setPedidoId(null)} />
       ) : (
         <>
-          <section>
-            <h2>Produtos</h2>
-            <ul className="lista">
-              {produtos.map((p) => (
-                <li key={p.id}>
-                  <span>{p.name}</span>
-                  <span>{brl(p.price_cents)}</span>
-                  <button onClick={() => mudar(p.id, 1)}>Adicionar</button>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <div className="vitrine">
+            <section>
+              <h2>Produtos</h2>
+              <ul className="lista">
+                {produtos.map((p) => (
+                  <li key={p.id}>
+                    <span>{p.name}</span>
+                    <span className="preco">{brl(p.price_cents)}</span>
+                    <button onClick={() => mudar(p.id, 1)}>Adicionar</button>
+                  </li>
+                ))}
+              </ul>
+            </section>
 
-          <section>
-            <h2>Carrinho</h2>
-            {linhas.length === 0 ? (
-              <p className="suave">Vazio.</p>
-            ) : (
-              <>
-                <ul className="lista">
-                  {linhas.map((p) => (
-                    <li key={p.id}>
-                      <span>{p.name}</span>
-                      <span>
-                        <button onClick={() => mudar(p.id, -1)}>−</button> {carrinho[p.id]}{" "}
-                        <button onClick={() => mudar(p.id, 1)}>+</button>
-                      </span>
-                      <span>{brl(p.price_cents * carrinho[p.id])}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="total">Total: {brl(total)}</p>
-                <button className="primario" disabled={criando} onClick={finalizar}>
-                  {criando ? "Criando pedido…" : "Finalizar pedido"}
-                </button>
-              </>
-            )}
-          </section>
+            <section>
+              <h2>Carrinho</h2>
+              {linhas.length === 0 ? (
+                <p className="suave">Seu carrinho está vazio. Adicione um produto para começar.</p>
+              ) : (
+                <>
+                  <ul className="lista">
+                    {linhas.map((p) => (
+                      <li key={p.id}>
+                        <span>{p.name}</span>
+                        <span className="qtd">
+                          <button aria-label={`Remover um ${p.name}`} onClick={() => mudar(p.id, -1)}>−</button>
+                          <b>{carrinho[p.id]}</b>
+                          <button aria-label={`Adicionar um ${p.name}`} onClick={() => mudar(p.id, 1)}>+</button>
+                        </span>
+                        <span className="preco">{brl(p.price_cents * carrinho[p.id])}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="total">
+                    <span>Total</span>
+                    <span>{brl(total)}</span>
+                  </p>
+                  <button className="primario" disabled={criando} onClick={finalizar}>
+                    {criando ? "Criando pedido…" : "Finalizar pedido"}
+                  </button>
+                </>
+              )}
+            </section>
+          </div>
 
           <section>
             <h2>Pedidos recentes</h2>
@@ -113,9 +119,9 @@ export default function App() {
             <ul className="lista">
               {lista.map((o) => (
                 <li key={o.id}>
-                  <button className="link" onClick={() => setPedidoId(o.id)}>{o.id}</button>
+                  <button className="link id" onClick={() => setPedidoId(o.id)}>{o.id}</button>
                   <Selo status={o.status} />
-                  <span>{brl(o.total_cents)}</span>
+                  <span className="preco">{brl(o.total_cents)}</span>
                 </li>
               ))}
             </ul>
@@ -137,24 +143,27 @@ function Pedido({ id, config, voltar }) {
     return () => clearInterval(t);
   }, [id]);
 
-  if (!pedido) return <p>{erro || "Carregando…"}</p>;
+  if (!pedido) return <p className="suave">{erro || "Carregando…"}</p>;
   const pagavel = pedido.status === "pendente" || pedido.status === "recusado";
 
   return (
-    <section>
+    <section className="recibo">
       <button className="link" onClick={voltar}>← Voltar à loja</button>
       <h2>
-        Pedido {pedido.id} <Selo status={pedido.status} />
+        Pedido <span className="id">{pedido.id}</span> <Selo status={pedido.status} />
       </h2>
       <ul className="lista">
         {pedido.items.map((i) => (
           <li key={i.product_id}>
             <span>{i.quantity}× {i.name}</span>
-            <span>{brl(i.unit_price_cents * i.quantity)}</span>
+            <span className="preco">{brl(i.unit_price_cents * i.quantity)}</span>
           </li>
         ))}
       </ul>
-      <p className="total">Total: {brl(pedido.total_cents)}</p>
+      <p className="total">
+        <span>Total</span>
+        <span>{brl(pedido.total_cents)}</span>
+      </p>
 
       {pagavel && <Pagamento pedido={pedido} config={config} aoMudar={carregar} />}
       {pedido.status === "pago" && (
@@ -214,7 +223,16 @@ function Pagamento({ pedido, config, aoMudar }) {
       )}
       {!stripePromise && <p className="erro">Chave pública do Stripe ausente: confira STRIPE_PUBLISHABLE_KEY no .env.</p>}
       {segredo && stripePromise && (
-        <Elements stripe={stripePromise} options={{ clientSecret: segredo }}>
+        <Elements
+          stripe={stripePromise}
+          options={{
+            clientSecret: segredo,
+            appearance: {
+              theme: "stripe",
+              variables: { colorPrimary: "#0f5c4d", colorText: "#14211f", borderRadius: "10px", fontFamily: "Figtree, system-ui, sans-serif" },
+            },
+          }}
+        >
           <FormularioStripe aoMudar={aoMudar} />
         </Elements>
       )}
