@@ -13,11 +13,15 @@ Uma loja virtual em que o **Stripe (modo de teste)** confirma o pagamento **depo
 | Segurança | Assinatura HMAC-SHA256 do webhook (formato `Stripe-Signature`) e header `Idempotency-Key` |
 | Testes | pytest |
 
+> **Documentação de engenharia:** regras do projeto em [`AGENTS.md`](AGENTS.md); arquitetura, banco de dados e bibliotecas em [`docs/`](docs/README.md); decisões em [`docs/adr/`](docs/adr/README.md) e contratos em [`docs/specs/`](docs/specs/README.md).
+
 ---
 
 ## 1. Estrutura
 
 ```
+AGENTS.md              # regras do projeto (pessoas e agentes)
+docs/                  # arquitetura, banco, bibliotecas, ADRs e Specs
 backend/
   app/
     state_machine.py   # máquina de estados do pedido (pura, sem I/O)
